@@ -1,0 +1,72 @@
+# 13ft companion — Fly.io deployment for Ladder.
+#
+# One-click cloud deploy of the Ladder reverse proxy on a $0/month
+# shared-cpu-1x machine. Gives 13ft an IP outside your home network,
+# which is what FCrDNS-protected publishers actually check.
+#
+# ⚠ FlareSolverr is NOT included in this template. Fly Machines
+# expects one service per app, and FlareSolverr's Chromium dep
+# pushes the image past the free tier's 256MB RAM. If you need
+# Cloudflare CAPTCHA solving, run docker-compose locally instead,
+# or deploy FlareSolverr as a separate Fly app and wire it in via
+# FLARESOLVERR=https://your-flaresolverr.fly.dev/v1.
+#
+# In practice ~70% of FCrDNS-stuck sites work from a clean Fly IP
+# even without FlareSolverr — the IP is the lock, not the captcha.
+#
+# Setup:
+#   1. Edit `app = ...` below to a name you own (must be globally unique).
+#   2. Pick a region close to you (or to the publisher you read most).
+#   3. Set a password:
+#        flyctl secrets set USERNAME=ladder PASSWORD=$(openssl rand -hex 16)
+#   4. Deploy:
+#        flyctl launch --copy-config --no-deploy
+#        flyctl deploy
+#   5. Point 13ft's "custom (Ladder)…" proxy at:
+#        https://<your-app>.fly.dev/
+#
+# Cost: shared-cpu-1x@256mb runs free under Fly's $5 monthly credit
+# for hobby projects. If you hammer it, expect ~$2/month bandwidth.
+
+app = "13ft-ladder"
+primary_region = "iad"   # Ashburn, VA. Change to nearest region.
+
+[build]
+  image = "ghcr.io/everywall/ladder:latest"
+
+[env]
+  PORT = "8080"
+  RULESET = "/config/ruleset.yaml"
+  # FLARESOLVERR uncommented only if you deploy it separately:
+  # FLARESOLVERR = "https://your-flaresolverr.fly.dev/v1"
+
+# Username/password come from `flyctl secrets set` — never commit them.
+# Ladder reads USERNAME and PASSWORD env vars and Basic-Auth-protects
+# every request when both are set.
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"      # scale to zero when idle
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 20
+    hard_limit = 25
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+  cpus = 1
+
+# Note on the ruleset: this template doesn't bake the YAML into the
+# image. Two options:
+#   A. Fork ghcr.io/everywall/ladder, COPY ruleset.yaml in, push to
+#      your own registry, point `image =` at it.
+#   B. Use Ladder's RULESET_URL env var instead of RULESET, pointing
+#      at a public Gist of your ruleset.yaml. Faster to iterate.
+#      Set RULESET_URL via `flyctl secrets set RULESET_URL=https://...`
+#      and remove the RULESET line from [env] above.

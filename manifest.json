@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "13ft",
+  "version": "0.18.0",
+  "description": "Bypass paywalls by masquerading as Googlebot and stripping paywall overlays. Toggle per-site from the toolbar.",
+  "permissions": [
+    "declarativeNetRequest",
+    "storage",
+    "tabs",
+    "scripting",
+    "alarms"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "13ft",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "run_at": "document_end",
+      "js": ["sites.js", "sites.generated.js", "content.js"]
+    }
+  ]
+}

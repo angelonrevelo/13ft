@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>13ft — statistics</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        margin: 0; padding: 2em; max-width: 1100px;
+        margin-left: auto; margin-right: auto;
+        background: #f7f7f5; color: #111;
+      }
+      @media (prefers-color-scheme: dark) {
+        body { background: #1a1a1a; color: #eee; }
+        .panel { background: #2a2a2a !important; border-color: #444 !important; }
+        .panel h2 { color: #eee !important; }
+        td, th { border-bottom-color: #444 !important; }
+      }
+      h1 { font-size: 24px; margin: 0 0 0.5em; }
+      .sub { color: #888; font-size: 13px; margin-bottom: 2em; }
+      .grid {
+        display: grid; gap: 1.5em;
+        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      }
+      .panel {
+        background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+        padding: 1.2em 1.4em;
+      }
+      .panel h2 { font-size: 14px; margin: 0 0 1em; color: #333; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th { text-align: left; font-weight: 600; padding: 6px 8px;
+           border-bottom: 1px solid #ccc; color: #666; font-size: 11px; }
+      td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+      td.r { text-align: right; font-variant-numeric: tabular-nums; }
+      .bar { background: #2ea44f; height: 10px; border-radius: 2px;
+             display: inline-block; vertical-align: middle; margin-right: 6px; }
+      .bar.fail { background: #a61b1b; }
+      .bar.warn { background: #a06800; }
+      .empty { color: #888; font-style: italic; padding: 1em 0; }
+      svg.sankey { width: 100%; max-width: 100%; }
+      .strategy { font-size: 10px; padding: 2px 6px; border-radius: 3px;
+                  font-weight: 700; text-transform: uppercase;
+                  letter-spacing: 0.05em; }
+      .strategy.googlebot     { background: #1f6feb; color: #fff; }
+      .strategy.bingbot       { background: #008373; color: #fff; }
+      .strategy.cookie-reset  { background: #a06800; color: #fff; }
+      .strategy.proxy         { background: #111; color: #fff; }
+      .strategy.exhausted     { background: #a61b1b; color: #fff; }
+      .stat-row { display: flex; justify-content: space-between; align-items: baseline;
+                  padding: 8px 0; border-bottom: 1px solid #eee; }
+      .stat-row b { font-size: 18px; }
+      .raw { font-family: ui-monospace, "SF Mono", monospace;
+             font-size: 11px; color: #666; word-break: break-all; }
+    </style>
+  </head>
+  <body>
+    <h1>13ft — statistics</h1>
+    <div class="sub" id="lastUpdated">Loading…</div>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>Overview</h2>
+        <div id="overview"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Strategy chain transitions</h2>
+        <div id="sankeyContainer">
+          <svg class="sankey" viewBox="0 0 600 220" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div class="raw" id="sankeyDetail" style="margin-top:1em"></div>
+      </div>
+
+      <div class="panel" style="grid-column: 1 / -1">
+        <h2>Per-host failure counts</h2>
+        <table id="hostsTable">
+          <thead>
+            <tr>
+              <th>Host</th>
+              <th>googlebot</th><th>bingbot</th>
+              <th>cookie-reset</th><th>proxy</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <h2>Proxy health</h2>
+        <table id="proxyTable">
+          <thead><tr><th>Proxy</th><th>Reachable</th><th class="r">Latency</th><th class="r">Last checked</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <h2>Rules cache</h2>
+        <div id="rulesPanel"></div>
+      </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+  </body>
+</html>

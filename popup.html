@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root { color-scheme: light dark; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        width: 300px;
+        margin: 0;
+        padding: 14px;
+        font-size: 13px;
+      }
+      h1 {
+        font-size: 13px;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: 0.02em;
+      }
+      .site {
+        font-size: 11px;
+        color: #888;
+        word-break: break-all;
+        margin: 2px 0 10px;
+        min-height: 13px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 8px 0;
+      }
+      .row label { font-size: 12px; }
+      button#toggle {
+        border: 0;
+        border-radius: 6px;
+        padding: 7px 14px;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        min-width: 72px;
+      }
+      button#toggle.on  { background: #2ea44f; color: #fff; }
+      button#toggle.off { background: #e5e5e5; color: #333; }
+      button#toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+      select, input[type="url"] {
+        font-size: 12px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        background: #fff;
+        color: #111;
+        font-family: inherit;
+      }
+      button#checkProxy, button#readerMode {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        background: #f6f6f6;
+        color: #333;
+        cursor: pointer;
+      }
+      button#readerMode { width: 100%; padding: 6px; font-weight: 600; }
+      button#llmCompleter {
+        width: 100%; padding: 6px; font-weight: 600;
+        background: #6f4cba; color: #fff; border: 0;
+        border-radius: 4px; cursor: pointer; font-size: 12px;
+      }
+      button#generateReport, button#refreshRules {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        background: #f6f6f6;
+        color: #333;
+        cursor: pointer;
+      }
+      button#checkProxy:disabled, button#readerMode:disabled,
+      button#generateReport:disabled, button#refreshRules:disabled {
+        opacity: 0.5; cursor: wait;
+      }
+      input#customUrl { width: 100%; box-sizing: border-box; }
+      .section {
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px solid #eee;
+      }
+      .section.hidden { display: none; }
+      .hint {
+        font-size: 11px;
+        color: #888;
+        line-height: 1.4;
+        margin-top: 6px;
+      }
+      .badge {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        padding: 2px 5px;
+        border-radius: 3px;
+        margin-left: 4px;
+        vertical-align: 1px;
+        text-transform: uppercase;
+      }
+      .badge.googlebot     { background: #1f6feb; color: #fff; }
+      .badge.bingbot       { background: #008373; color: #fff; }
+      .badge.proxy         { background: #111;    color: #fff; }
+      .badge.cookie-reset  { background: #a06800; color: #fff; }
+      .badge.perplexitybot { background: #6f4cba; color: #fff; }
+      .badge.claudebot     { background: #c2410c; color: #fff; }
+      .badge.gptbot        { background: #047857; color: #fff; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #1e1e1e; color: #eee; }
+        .site, .hint { color: #999; }
+        .section { border-top-color: #333; }
+        select, input[type="url"] { background: #2a2a2a; color: #eee; border-color: #444; }
+        button#checkProxy { background: #2a2a2a; color: #ddd; border-color: #444; }
+        #proxyHealthTable td { color: #ddd; border-bottom-color: #2a2a2a !important; }
+        button#readerMode { background: #2a2a2a; color: #ddd; border-color: #444; }
+        button#toggle.off { background: #333; color: #ddd; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="row" style="margin-top:0">
+      <h1>13ft</h1>
+      <button id="toggle" class="off" disabled>OFF</button>
+    </div>
+    <div class="site" id="site">—</div>
+
+    <div class="row">
+      <label>Strategy</label>
+      <select id="strategy">
+        <option value="googlebot">Googlebot UA</option>
+        <option value="bingbot">Bingbot UA</option>
+        <option value="cookie-reset">Cookie reset</option>
+        <option value="proxy">Proxy</option>
+        <optgroup label="AI crawlers (revenue-share publishers)">
+          <option value="perplexitybot">PerplexityBot UA</option>
+          <option value="claudebot">ClaudeBot UA</option>
+          <option value="gptbot">GPTBot UA</option>
+        </optgroup>
+        <optgroup label="Other">
+          <option value="mobile">Mobile Safari UA</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="section" id="proxySection">
+      <div class="row">
+        <label>Content proxy</label>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <select id="proxy"></select>
+          <button id="checkProxy" type="button">Check</button>
+        </div>
+      </div>
+      <div class="row" id="customUrlRow" style="display:none">
+        <input
+          id="customUrl"
+          type="url"
+          placeholder="http://localhost:8080/"
+          spellcheck="false"
+        />
+      </div>
+      <div class="hint" id="proxyHint">
+        Redirects main_frame navigations through the selected proxy.
+      </div>
+      <details id="proxyHealthDetails" style="margin-top:6px">
+        <summary
+          style="font-size:11px; color:#888; cursor:pointer; user-select:none">
+          Proxy health
+        </summary>
+        <table id="proxyHealthTable"
+          style="font-size:11px; width:100%; border-collapse:collapse; margin-top:4px">
+          <tbody></tbody>
+        </table>
+      </details>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <button id="readerMode" type="button">Reader Mode</button>
+    </div>
+    <div class="row" id="llmRow" style="display:none">
+      <button id="llmCompleter" type="button">Get LLM summary…</button>
+    </div>
+
+    <details id="advancedSection" style="margin-top:10px">
+      <summary style="font-size:11px; color:#888; cursor:pointer; user-select:none;">
+        Advanced
+      </summary>
+      <div class="row" style="margin-top:6px">
+        <label style="font-size:11px;">
+          <input type="checkbox" id="diagnosticToggle" style="margin-right:6px;">
+          Diagnostic mode
+        </label>
+        <button id="generateReport" type="button">Generate report</button>
+      </div>
+      <div class="row">
+        <button id="refreshRules" type="button" style="width:100%">Refresh rules now</button>
+      </div>
+      <div class="hint" id="rulesStatus" style="font-size:10px;">
+        Rules: loading…
+      </div>
+      <div class="row">
+        <a id="dashboardLink" href="dashboard.html" target="_blank"
+           style="font-size:11px; color:#1f6feb; text-decoration:underline;">
+          Open statistics dashboard →
+        </a>
+      </div>
+    </details>
+
+    <div class="hint" id="globalHint" style="margin-top:10px">
+      Toggle a site on, then reload. Unknown sites default to Googlebot.
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

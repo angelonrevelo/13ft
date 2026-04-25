@@ -1,0 +1,57 @@
+# 13ft companion — Ladder reverse proxy + FlareSolverr.
+#
+# Stacked on top of the 13ft browser extension to handle the ~10% of
+# sites that 13ft can't bypass client-side: FCrDNS-protected
+# publishers (FT, Bloomberg premium, WSJ premium) and Cloudflare-
+# challenged sites.
+#
+# Usage:
+#   docker compose up -d
+#   → http://localhost:8080/<https-url>
+#
+# Then in the 13ft popup:
+#   Strategy → Proxy
+#   Content proxy → custom (Ladder)…
+#   URL → http://localhost:8080/
+#
+# WARNING: keep this on localhost or Tailscale. Exposing to the
+# public Internet without auth turns it into an open relay; the
+# webhost will eventually receive a TOS complaint. See README.md
+# for hardening before deploying anywhere reachable.
+
+services:
+  ladder:
+    image: ghcr.io/everywall/ladder:latest
+    container_name: 13ft-ladder
+    ports:
+      - "127.0.0.1:8080:8080"   # bind to localhost only by default
+    environment:
+      - PORT=8080
+      - RULESET=/config/ruleset.yaml
+      - FLARESOLVERR=http://flaresolverr:8191/v1
+      # Uncomment to require a password (recommended for non-localhost):
+      # - USERNAME=ladder
+      # - PASSWORD=changeme
+    volumes:
+      - ./ladder-config:/config:ro
+    restart: unless-stopped
+    depends_on:
+      flaresolverr:
+        condition: service_healthy
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: 13ft-flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=UTC
+    expose:
+      - "8191"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8191/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6

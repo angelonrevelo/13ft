@@ -1,0 +1,54 @@
+# 13ft companion — Ladder ruleset.
+#
+# Starter rules covering the FCrDNS-protected sites where 13ft's
+# client-side bypass fails. These get fetched from Ladder's
+# datacenter IP rather than the user's home IP, sidestepping the
+# Googlebot-IP-range verification publishers do at the edge.
+#
+# Ladder's full schema:
+#   https://github.com/everywall/ladder
+# Community rules:
+#   https://github.com/everywall/ladder-rules
+
+# --- Hardened publishers (FCrDNS class) ---
+
+- domain: ft.com
+  domains: [ft.com, www.ft.com]
+  useFlareSolverr: true
+  headers:
+    user-agent: "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    referer: "https://www.google.com/"
+
+- domain: bloomberg.com
+  domains: [bloomberg.com, www.bloomberg.com]
+  useFlareSolverr: true
+  headers:
+    user-agent: "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    referer: "https://www.google.com/"
+  regexRules:
+    - match: '<script[^>]*src="[^"]*tinypass[^"]*"[^>]*></script>'
+      replace: ''
+
+- domain: wsj.com
+  domains: [wsj.com, www.wsj.com]
+  useFlareSolverr: true
+  headers:
+    user-agent: "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    referer: "https://www.google.com/"
+
+- domain: lemonde.fr
+  domains: [lemonde.fr, www.lemonde.fr]
+  useFlareSolverr: true
+  headers:
+    user-agent: "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    referer: "https://www.google.com/"
+  injections:
+    - position: head
+      append: |
+        <script>
+          // Le Monde detects extensions via globals; mask what we can.
+          try { window.__ft13_extDetected = false; } catch (e) {}
+        </script>
+
+# --- Add your own rules below ---
+# See https://github.com/everywall/ladder-rules for community examples.

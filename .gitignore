@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Node (tooling, scripts)
+node_modules/
+package-lock.json
+
+# Build artifacts
+*.zip
+dist/
+build/
+
+# Test runs / scratch
+tests/live/runs/*.json
+!tests/live/runs/.gitkeep
+
+# Companion runtime
+companion/.env
+companion/data/
